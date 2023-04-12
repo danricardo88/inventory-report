@@ -23,4 +23,5 @@ class SimpleReport:
             f"Data de fabricação mais antiga: {data_fabricacao_antiga}\n"
             f"Data de validade mais próxima: {validade_proxima}\n"
             f"Empresa com mais produtos: {empresa_mais_produtos}\n"
+            f"Empresa com mais produtos: {max(empresas, key=empresas.count)}\n"
         )
