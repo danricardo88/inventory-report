@@ -1,29 +1,40 @@
-from .simple_report import SimpleReport
+from inventory_report.reports.simple_report import SimpleReport
+from datetime import datetime
+from collections import defaultdict
 
 
 class CompleteReport(SimpleReport):
     @staticmethod
-    def generate(data):
-        oldest_date = min(item["data_de_fabricacao"] for item in data)
-        nearest_date = min(item["data_de_validade"] for item in data)
-        largest_stock = max(
-            (item["nome_da_empresa"], data.count(item)) for item in set(data)
-        )
-        stock_per_company = {}
-        for item in data:
-            stock_per_company[item["nome_da_empresa"]] = (
-                stock_per_company.get(item["nome_da_empresa"], 0) + 1
-            )
-        stock_per_company = sorted(
-            stock_per_company.items(),
-            key=lambda x: data.index({"nome_da_empresa": x[0]}),
-        )
+    def generate(products):
+        data_fabricacao_antiga = min(
+            [
+                datetime.strptime(p["data_de_fabricacao"], "%Y-%m-%d")
+                for p in products
+            ]
+        ).strftime("%Y-%m-%d")
 
-        result = f"Data de fabricação mais antiga: {oldest_date}\n"
-        result += f"Data de validade mais próxima: {nearest_date}\n"
-        result += f"Empresa com mais produtos: {largest_stock[0]}\n"
-        result += "Produtos estocados por empresa:\n"
-        for company, stock in stock_per_company:
-            result += f"- {company}: {stock}\n"
+        validade_proxima = min(
+            [
+                datetime.strptime(p["data_de_validade"], "%Y-%m-%d")
+                for p in products
+                if datetime.strptime(p["data_de_validade"], "%Y-%m-%d")
+                >= datetime.today()
+            ]
+        ).strftime("%Y-%m-%d")
 
-        return result
+        empresas = defaultdict(int)
+        for p in products:
+            empresas[p["nome_da_empresa"]] += 1
+
+        empresa_mais_produtos = max(empresas, key=empresas.get)
+
+        report = (
+            f"Data de fabricação mais antiga: {data_fabricacao_antiga}\n"
+            f"Data de validade mais próxima: {validade_proxima}\n"
+            f"Empresa com mais produtos: {empresa_mais_produtos}\n"
+            "Produtos estocados por empresa:\n"
+        )
+        for company in empresas:
+            report += f"- {company}: {empresas[company]}\n"
+
+        return report
