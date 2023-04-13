@@ -1,28 +1,24 @@
-import csv
-import json
-
-from inventory_report.reports.complete_report import CompleteReport
 from inventory_report.reports.simple_report import SimpleReport
+from inventory_report.reports.complete_report import CompleteReport
+from inventory_report.importer.csv_importer import Csv_Importer
+from inventory_report.importer.json_importer import Json_Importer
+from inventory_report.importer.xml_importer import Xml_Importer
 
 
-class Inventory:
-    @staticmethod
-    def import_data(file_path, report_type):
-        with open(file_path, "r") as file:
-            if file_path.endswith(".csv"):
-                reader = csv.DictReader(file)
-                data = [dict(row) for row in reader]
-            elif file_path.endswith(".json"):
-                data = json.load(file)
-            else:
-                raise ValueError(
-                    "Tipo de arquivo inválido. Forneça um arquivo CSV ou JSON."
-                )
-            if report_type == "simples":
-                return SimpleReport.generate(data)
-            elif report_type == "completo":
-                return CompleteReport.generate(data)
-            else:
-                raise ValueError(
-                    "Relatório inválido, forneça 'simples' ou 'completo."
-                )
+report_type = {"simples": SimpleReport, "completo": CompleteReport}
+
+
+class InventoryReport:
+    @classmethod
+    def import_data(cls, path):
+        if ".csv" in path:
+            data = Csv_Importer.import_data(path)
+        elif ".json" in path:
+            data = Json_Importer.import_data(path)
+        elif ".xml" in path:
+            data = Xml_Importer.import_data(path)
+        else:
+            # raise ValueError("Arquivo inválido")
+            data = Xml_Importer.import_data(path)
+
+        return report_type[type].generate(data)
